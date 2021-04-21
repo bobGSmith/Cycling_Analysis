@@ -86,14 +86,15 @@ def ride_summary_plot(ride_data,ride_name,ride_date, plot_path):
     max_speed = max(ride_data.speed)
     max_fiveminpower = max(ride_data.fiveminpower)
     peak_altitude = max(ride_data.elevation)
-    plt.fill_between(ride_data.seconds,y1=(ride_data.elevation/peak_altitude * max_speed)+(max_speed/2), y2=0,alpha = 0.3,label = "elevation", color = "gray")
+    plt.fill_between(ride_data.seconds,y1=(ride_data.elevation/peak_altitude * max_speed)+(max_speed/2), y2=0,alpha = 0.3,label = "Elevation", color = "gray")
     #plt.plot(ride_data.seconds, (ride_data.fiveminpower/max_fiveminpower * max_speed) - (min(ride_data.fiveminpower/max_fiveminpower)*(max_speed/2)),
     #         label = "5 min power (w)", color = "blue", alpha = 0.5)
     #plt.plot(ride_data.seconds, ride_data.speed.rolling(window = 30).mean(), label = "speed (km/h)",color = "black", alpha = 0.8)
     plt.scatter(ride_data.seconds,np.zeros(len(ride_data)),s=200, c = ride_data.power.rolling(window=5*60).mean(),cmap="hot", alpha = 0.5,marker ="s")
-    plt.plot(ride_data.seconds, ride_data.speed.rolling(window = 30).mean(), label = "speed (km/h)",color = "black", alpha = 0.8)
-    plt.annotate("Power Heatmap", (50, 0), color = "black", size= 10, alpha = 0.7)
-    plt.legend()
+    plt.plot(ride_data.seconds, ride_data.speed.rolling(window = 30).mean(), label = "Speed (km/h)",color = "black", alpha = 0.8)
+    #plt.annotate("Power Heatmap\nLighter = More Power!", (50, -5), color = "black", size= 10, alpha = 0.7)
+    plt.scatter(x = [100], y = [0], label = "Power Heatmap\n(lighter = more power)", color = "red", marker = "s", s=200)
+    plt.legend(fontsize = "small", markerscale = 0.5, frameon = False)
     plt.ylabel("Speed (km/h)")
     plt.xlabel("Time elapsed (s)")
     plt.title(ride_name +" "+str(ride_date) + "\nClimbing: {:.1f} m, Av.Speed: {:.1f} kph, Av.Power: {:.1f} W".format(ride_data.climbing.iloc[-1],
@@ -124,17 +125,26 @@ def get_summary_stats(ride_data,power_curve):
                           "duration_sec":(ride_data.time.iloc[-1] - ride_data.time[0]).total_seconds(),
                           "climbing_meters":ride_data.climbing.iloc[-1],
                           "average_speed":ride_data.speed.mean(),
+                          "max_speed":ride_data.speed.max(),
+                          "max_5s_speed":ride_data.speed.rolling(window=5).mean().max(),
                           "average_power":ride_data.power.mean(),
                           "power_3s":float(power_curve.power.iloc[np.where(power_curve.seconds == 3)]),
                           "power_5s":float(power_curve.power.iloc[np.where(power_curve.seconds == 5)]),
                           "power_10s":float(power_curve.power.iloc[np.where(power_curve.seconds == 10)]),
                           "power_30s":float(power_curve.power.iloc[np.where(power_curve.seconds == 30)]),
                           "power_1m":float(power_curve.power.iloc[np.where(power_curve.minutes == 1)]),
-                          "power_2m":float(power_curve.power.iloc[np.where(power_curve.minutes == 2)]),
-                          "power_5m":float(power_curve.power.iloc[np.where(power_curve.minutes == 5)]),
-                          "power_10m":float(power_curve.power.iloc[np.where(power_curve.minutes == 10)]),
-                          "power_20m":float(power_curve.power.iloc[np.where(power_curve.minutes == 20)]),
-                          "power_1h":float(power_curve.power.iloc[np.where(power_curve.minutes == 60)])}
+                          "power_2m":float(power_curve.power.iloc[np.where(power_curve.minutes == 2)])
+                          }
+    if len(ride_data) > 60*5:
+        ride_summary_stats["max_5min_speed"]= ride_data.speed.rolling(window= 60*5).mean().max()
+        ride_summary_stats["power_5m"]= float(power_curve.power.iloc[np.where(power_curve.minutes == 5)])
+    if len(ride_data) > 60*20:
+        ride_summary_stats["power_10m"]= float(power_curve.power.iloc[np.where(power_curve.minutes == 10)])
+        ride_summary_stats["max_20min_speed"]= ride_data.speed.rolling(window= 60*20).mean().max()
+        ride_summary_stats["power_20m"]= float(power_curve.power.iloc[np.where(power_curve.minutes == 20)])
+    if len(ride_data) > 60 * 60:
+        ride_summary_stats["max_60min_speed"]= ride_data.speed.rolling(window= 60*60).mean().max()
+        ride_summary_stats["power_1h"]= float(power_curve.power.iloc[np.where(power_curve.minutes == 60)])
     ride_summary_stats = pd.DataFrame(ride_summary_stats, index=[0])
     return ride_summary_stats
 
