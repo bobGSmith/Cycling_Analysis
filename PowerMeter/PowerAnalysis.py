@@ -16,7 +16,7 @@ import PowerFunctions as power
 start = datetime.datetime.now()
 
 #os.chdir(os.path.dirname(sys.argv[0])) #set wd to source file location
-os.mkdir(os.getcwd()+"\\ride")
+
 data_path = os.getcwd()+"\\ride\\"
 data_files = os.listdir(data_path)
 
